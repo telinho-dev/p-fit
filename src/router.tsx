@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router";
 import { Shell } from "./App";
+import { ProtectedRoute } from "./components/protected-route";
 
 const HomePage = lazy(() => import("./features/home/home-page").then((m) => ({ default: m.HomePage })));
 const StrengthPage = lazy(() => import("./features/strength/strength-page").then((m) => ({ default: m.StrengthPage })));
@@ -19,20 +20,30 @@ function RouteLoader() {
   );
 }
 
+const wrap = (el: React.ReactElement) => <Suspense fallback={<RouteLoader />}>{el}</Suspense>;
+
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <Shell />,
     children: [
-      { index: true, element: <Suspense fallback={<RouteLoader />}><HomePage /></Suspense> },
-      { path: "strength", element: <Suspense fallback={<RouteLoader />}><StrengthPage /></Suspense> },
-      { path: "strength/:sessionKey", element: <Suspense fallback={<RouteLoader />}><StrengthPage /></Suspense> },
-      { path: "cardio", element: <Suspense fallback={<RouteLoader />}><CardioPage /></Suspense> },
-      { path: "weekly", element: <Suspense fallback={<RouteLoader />}><WeeklyPage /></Suspense> },
-      { path: "nutrition", element: <Suspense fallback={<RouteLoader />}><NutritionPage /></Suspense> },
-      { path: "family", element: <Suspense fallback={<RouteLoader />}><FamilyPage /></Suspense> },
-      { path: "settings", element: <Suspense fallback={<RouteLoader />}><SettingsPage /></Suspense> },
-      { path: "import", element: <Suspense fallback={<RouteLoader />}><ImportPage /></Suspense> },
+      // Always accessible — login lives here
+      { path: "settings", element: wrap(<SettingsPage />) },
+
+      // Protected — redirects to /settings when signed out
+      {
+        element: <ProtectedRoute />,
+        children: [
+          { index: true, element: wrap(<HomePage />) },
+          { path: "strength", element: wrap(<StrengthPage />) },
+          { path: "strength/:sessionKey", element: wrap(<StrengthPage />) },
+          { path: "cardio", element: wrap(<CardioPage />) },
+          { path: "weekly", element: wrap(<WeeklyPage />) },
+          { path: "nutrition", element: wrap(<NutritionPage />) },
+          { path: "family", element: wrap(<FamilyPage />) },
+          { path: "import", element: wrap(<ImportPage />) },
+        ],
+      },
     ],
   },
 ]);
