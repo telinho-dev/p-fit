@@ -4,6 +4,7 @@ import { useStore } from "@/lib/store";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { WeeklyLeaderboard } from "./leaderboard";
 
 export function FamilyPage() {
   const { family, createFamily, joinFamily, auth } = useStore();
@@ -247,6 +248,8 @@ function FamilyView() {
           </p>
         </div>
       )}
+
+      <WeeklyLeaderboard />
 
       <div className="rounded-2xl border border-(--color-line) bg-(--color-panel) overflow-hidden">
         <div className="px-4 pt-4 pb-2 border-b border-(--color-line)">

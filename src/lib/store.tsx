@@ -16,6 +16,7 @@ import {
   type Family,
   type FamilyActivity,
   type FamilyMember,
+  type LeaderboardEntry,
   type StorageAdapter,
   type UserSettings,
   type WeeklyLog,
@@ -51,6 +52,7 @@ type StoreContextValue = {
   upsertDailyLog: (log: DailyLog) => void;
   family: Family | null;
   familyActivity: FamilyActivity[];
+  weeklyLeaderboard: LeaderboardEntry[];
   createFamily: (name: string, displayName: string) => Promise<string | null>;
   joinFamily: (inviteCode: string, displayName: string) => Promise<string | null>;
   leaveFamily: () => Promise<string | null>;
@@ -67,6 +69,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [migrationPending, setMigrationPending] = useState<AppData | null>(null);
   const [family, setFamily] = useState<Family | null>(null);
   const [familyActivity, setFamilyActivity] = useState<FamilyActivity[]>([]);
+  const [weeklyLeaderboard, setWeeklyLeaderboard] = useState<LeaderboardEntry[]>([]);
   const writeTimer = useRef<number | null>(null);
   const pendingMigration = useRef<{ userId: string; email: string } | null>(null);
 
@@ -150,6 +153,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         switchAdapter(new LocalStorageAdapter());
         setFamily(null);
         setFamilyActivity([]);
+        setWeeklyLeaderboard([]);
       }
     });
 
@@ -319,65 +323,102 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       members,
     });
 
-    const otherUserIds = members.map((m) => m.userId).filter((id) => id !== user.id);
-    if (otherUserIds.length === 0) {
-      setFamilyActivity([]);
-      return;
-    }
-
     const currentWeek = getISOWeek();
-    const prevWeek = currentWeek > 1 ? currentWeek - 1 : 52;
+    const otherUserIds = members.map((m) => m.userId).filter((id) => id !== user.id);
 
-    const [{ data: exLogs }, { data: wkLogs }] = await Promise.all([
-      supabase
-        .from("p_exercise_logs")
-        .select("user_id, session_key, week, updated_at")
-        .in("user_id", otherUserIds)
-        .in("week", [currentWeek, prevWeek])
-        .eq("set_number", 0)
-        .order("updated_at", { ascending: false }),
-      supabase
-        .from("p_weekly_logs")
-        .select("user_id, week, updated_at")
-        .in("user_id", otherUserIds)
-        .in("week", [currentWeek, prevWeek])
-        .order("updated_at", { ascending: false }),
-    ]);
+    if (otherUserIds.length > 0) {
+      const prevWeek = currentWeek > 1 ? currentWeek - 1 : 52;
 
-    const displayNameMap = new Map(members.map((m) => [m.userId, m.displayName]));
-    const seen = new Set<string>();
-    const activities: FamilyActivity[] = [];
+      const [{ data: exLogs }, { data: wkLogs }] = await Promise.all([
+        supabase
+          .from("p_exercise_logs")
+          .select("user_id, session_key, week, updated_at")
+          .in("user_id", otherUserIds)
+          .in("week", [currentWeek, prevWeek])
+          .eq("set_number", 0)
+          .order("updated_at", { ascending: false }),
+        supabase
+          .from("p_weekly_logs")
+          .select("user_id, week, updated_at")
+          .in("user_id", otherUserIds)
+          .in("week", [currentWeek, prevWeek])
+          .order("updated_at", { ascending: false }),
+      ]);
 
-    for (const row of exLogs ?? []) {
-      const key = `${row.user_id as string}-strength-${row.session_key as string}-${row.week as number}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      const sessionType = (row.session_key as string).includes("lower") || (row.session_key as string).includes("upper") ? "strength" : "cardio";
-      activities.push({
-        userId: row.user_id as string,
-        displayName: displayNameMap.get(row.user_id as string) ?? "",
-        type: sessionType,
-        sessionKey: row.session_key as string,
-        week: row.week as number,
-        loggedAt: row.updated_at as string,
-      });
+      const displayNameMap = new Map(members.map((m) => [m.userId, m.displayName]));
+      const seen = new Set<string>();
+      const activities: FamilyActivity[] = [];
+
+      for (const row of exLogs ?? []) {
+        const key = `${row.user_id as string}-strength-${row.session_key as string}-${row.week as number}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const sessionType = (row.session_key as string).includes("lower") || (row.session_key as string).includes("upper") ? "strength" : "cardio";
+        activities.push({
+          userId: row.user_id as string,
+          displayName: displayNameMap.get(row.user_id as string) ?? "",
+          type: sessionType,
+          sessionKey: row.session_key as string,
+          week: row.week as number,
+          loggedAt: row.updated_at as string,
+        });
+      }
+
+      for (const row of wkLogs ?? []) {
+        const key = `${row.user_id as string}-weekly-${row.week as number}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        activities.push({
+          userId: row.user_id as string,
+          displayName: displayNameMap.get(row.user_id as string) ?? "",
+          type: "weekly",
+          week: row.week as number,
+          loggedAt: row.updated_at as string,
+        });
+      }
+
+      activities.sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime());
+      setFamilyActivity(activities);
+    } else {
+      setFamilyActivity([]);
     }
 
-    for (const row of wkLogs ?? []) {
-      const key = `${row.user_id as string}-weekly-${row.week as number}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      activities.push({
-        userId: row.user_id as string,
-        displayName: displayNameMap.get(row.user_id as string) ?? "",
-        type: "weekly",
-        week: row.week as number,
-        loggedAt: row.updated_at as string,
-      });
+    const allUserIds = members.map((m) => m.userId);
+    const { data: leaderRows } = await supabase
+      .from("p_exercise_logs")
+      .select("user_id, session_key")
+      .in("user_id", allUserIds)
+      .eq("week", currentWeek)
+      .eq("set_number", 1);
+
+    const sessionCounts = new Map<string, Set<string>>();
+    const cardioCounts = new Map<string, Set<string>>();
+
+    for (const row of leaderRows ?? []) {
+      const uid = row.user_id as string;
+      const sk = row.session_key as string;
+      const isCardio = sk.includes("cardio") || sk.includes("zona");
+      if (isCardio) {
+        if (!cardioCounts.has(uid)) cardioCounts.set(uid, new Set());
+        cardioCounts.get(uid)!.add(sk);
+      } else {
+        if (!sessionCounts.has(uid)) sessionCounts.set(uid, new Set());
+        sessionCounts.get(uid)!.add(sk);
+      }
     }
 
-    activities.sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime());
-    setFamilyActivity(activities);
+    const leaderboard: LeaderboardEntry[] = members
+      .map((m) => ({
+        userId: m.userId,
+        displayName: m.displayName,
+        sessionsCount: sessionCounts.get(m.userId)?.size ?? 0,
+        cardioCount: cardioCounts.get(m.userId)?.size ?? 0,
+        totalCount: (sessionCounts.get(m.userId)?.size ?? 0) + (cardioCounts.get(m.userId)?.size ?? 0),
+        isCurrentUser: m.userId === user.id,
+      }))
+      .sort((a, b) => b.totalCount - a.totalCount || a.displayName.localeCompare(b.displayName));
+
+    setWeeklyLeaderboard(leaderboard);
   }, []);
 
   refreshFamilyRef.current = refreshFamily;
@@ -469,6 +510,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       upsertDailyLog,
       family,
       familyActivity,
+      weeklyLeaderboard,
       createFamily,
       joinFamily,
       leaveFamily,
@@ -481,7 +523,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       updateSettings, upsertExerciseLog, getExerciseLogs,
       upsertWeeklyLog, getWeeklyLog, replaceData, resetData,
       getDailyLog, upsertDailyLog,
-      family, familyActivity, createFamily, joinFamily, leaveFamily, refreshFamily,
+      family, familyActivity, weeklyLeaderboard, createFamily, joinFamily, leaveFamily, refreshFamily,
     ],
   );
 
