@@ -115,3 +115,12 @@ export type ImportResult = {
   confidence: number;
   notes: string;
 };
+
+export type LeaderboardEntry = {
+  userId: string;
+  displayName: string;
+  sessionsCount: number;
+  cardioCount: number;
+  totalCount: number;
+  isCurrentUser: boolean;
+};
