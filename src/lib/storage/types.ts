@@ -52,3 +52,26 @@ export interface StorageAdapter {
   load(): Promise<AppData>;
   save(data: AppData): Promise<void>;
 }
+
+export type FamilyMember = {
+  userId: string;
+  displayName: string;
+  joinedAt: string;
+};
+
+export type Family = {
+  id: string;
+  name: string;
+  ownerId: string;
+  inviteCode: string;
+  members: FamilyMember[];
+};
+
+export type FamilyActivity = {
+  userId: string;
+  displayName: string;
+  type: "strength" | "cardio" | "weekly";
+  sessionKey?: string;
+  week: number;
+  loggedAt: string;
+};

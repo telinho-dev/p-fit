@@ -6,6 +6,7 @@ import { CardioPage } from "./features/cardio/cardio-page";
 import { WeeklyPage } from "./features/weekly/weekly-page";
 import { NutritionPage } from "./features/nutrition/nutrition-page";
 import { SettingsPage } from "./features/settings/settings-page";
+import { FamilyPage } from "./features/family/family-page";
 
 export const router = createBrowserRouter([
   {
@@ -18,6 +19,7 @@ export const router = createBrowserRouter([
       { path: "cardio", element: <CardioPage /> },
       { path: "weekly", element: <WeeklyPage /> },
       { path: "nutrition", element: <NutritionPage /> },
+      { path: "family", element: <FamilyPage /> },
       { path: "settings", element: <SettingsPage /> },
     ],
   },

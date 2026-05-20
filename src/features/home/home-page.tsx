@@ -3,6 +3,7 @@ import { useNavigate } from "react-router";
 import { ChevronRight, Flame, Heart, Dumbbell as DumbbellIcon } from "lucide-react";
 import { WEEKLY_OVERVIEW, GENERAL_GUIDELINES, STRENGTH_SESSIONS, type StrengthSession } from "@/lib/plan/data";
 import { useStore } from "@/lib/store";
+import { type FamilyActivity } from "@/lib/storage/types";
 import { MultiRing } from "@/components/ui/ring";
 import { Badge } from "@/components/ui/badge";
 import { cn, getISOWeek } from "@/lib/utils";
@@ -32,7 +33,7 @@ export function HomePage() {
     [],
   );
 
-  const { data } = useStore();
+  const { data, family, familyActivity } = useStore();
 
   // Aggregate current ISO-week progress for the ring
   const week = data.weeklyLogs.find((l) => l.week === getISOWeek());
@@ -82,6 +83,21 @@ export function HomePage() {
           </ul>
         </div>
       </section>
+
+      {/* Family activity feed */}
+      {family !== null && familyActivity.length > 0 && (
+        <section className="space-y-3">
+          <div className="flex items-baseline justify-between px-1">
+            <h2 className="display text-[20px] text-(--color-ink)">Família esta semana</h2>
+            <span className="micro-label text-(--color-ink-mute)">{family.name}</span>
+          </div>
+          <ul className="space-y-2">
+            {familyActivity.slice(0, 5).map((item, i) => (
+              <FamilyActivityItem key={`${item.userId}-${item.type}-${item.week}-${i}`} item={item} />
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* Today's session — big call to action */}
       {(() => {
@@ -218,6 +234,59 @@ export function HomePage() {
       </section>
 
     </div>
+  );
+}
+
+const AVATAR_COLORS = [
+  "#ff5722", "#5ad6ff", "#b5ea3a", "#a78bfa", "#f59e0b", "#34d399",
+];
+
+function activityLabel(item: FamilyActivity): string {
+  if (item.type === "weekly") return `Semana W${item.week}`;
+  if (item.type === "cardio") return "Cardio";
+  if (item.sessionKey) {
+    const map: Record<string, string> = {
+      "lower-a": "Lower A",
+      "upper-a": "Upper A",
+      "lower-b": "Lower B",
+      "upper-b": "Upper B",
+    };
+    return map[item.sessionKey] ?? item.sessionKey;
+  }
+  return "Força";
+}
+
+function relativeTime(isoString: string): string {
+  const diffMs = Date.now() - new Date(isoString).getTime();
+  const diffMins = Math.floor(diffMs / 60_000);
+  const diffHours = Math.floor(diffMs / 3_600_000);
+  const diffDays = Math.floor(diffMs / 86_400_000);
+  if (diffMins < 1) return "agora";
+  if (diffMins < 60) return `há ${diffMins}min`;
+  if (diffHours < 24) return `há ${diffHours}h`;
+  if (diffDays === 1) return "ontem";
+  return `há ${diffDays} dias`;
+}
+
+function FamilyActivityItem({ item }: { item: FamilyActivity }) {
+  const colorIndex = item.userId.charCodeAt(0) % AVATAR_COLORS.length;
+  const color = AVATAR_COLORS[colorIndex];
+  const initial = item.displayName.trim().charAt(0).toUpperCase() || "?";
+
+  return (
+    <li className="flex items-center gap-3 rounded-2xl border border-(--color-line) bg-(--color-panel) px-4 py-3">
+      <div
+        className="grid place-items-center h-9 w-9 rounded-full shrink-0 font-display text-[14px] font-bold"
+        style={{ backgroundColor: `${color}24`, color }}
+      >
+        {initial}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-display text-[13px] font-semibold text-(--color-ink) truncate">{item.displayName}</p>
+        <p className="font-display text-[12px] text-(--color-ink-mute)">{activityLabel(item)}</p>
+      </div>
+      <span className="font-display text-[11px] text-(--color-ink-mute) shrink-0">{relativeTime(item.loggedAt)}</span>
+    </li>
   );
 }
 

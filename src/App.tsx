@@ -1,8 +1,9 @@
 import { NavLink, Outlet } from "react-router";
-import { Activity, Dumbbell, Home, Salad, ClipboardList, UserRound } from "lucide-react";
+import { Activity, Dumbbell, Home, Salad, ClipboardList, UserRound, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/store";
 import { isSupabaseConfigured } from "@/lib/supabase";
+import { MigrationDialog } from "@/components/migration-dialog";
 
 const TABS = [
   { to: "/", label: "Hoje", Icon: Home, end: true },
@@ -10,6 +11,7 @@ const TABS = [
   { to: "/cardio", label: "Cardio", Icon: Activity, end: false },
   { to: "/weekly", label: "Semanas", Icon: ClipboardList, end: false },
   { to: "/nutrition", label: "Nutri", Icon: Salad, end: false },
+  { to: "/family", label: "Família", Icon: Users, end: false },
   { to: "/settings", label: "Perfil", Icon: UserRound, end: false },
 ] as const;
 
@@ -18,6 +20,7 @@ export function Shell() {
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-2xl flex-col bg-(--color-bg)">
+      <MigrationDialog />
       {/* Status pill — top right floating */}
       <div className="pointer-events-none fixed top-3 right-3 z-30 sm:right-auto sm:left-1/2 sm:-translate-x-1/2">
         <div className="glass pointer-events-auto rounded-full px-3 py-1 flex items-center gap-2">
@@ -46,7 +49,7 @@ export function Shell() {
       <nav aria-label="Seções" className="safe-bottom fixed inset-x-0 bottom-3 z-20 px-3">
         <div className="mx-auto max-w-2xl">
           <div className="glass rounded-full px-2 py-1.5">
-            <div className="grid grid-cols-6">
+            <div className="grid grid-cols-7">
               {TABS.map(({ to, label, Icon, end }) => (
                 <NavLink
                   key={to}

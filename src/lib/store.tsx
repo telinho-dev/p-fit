@@ -12,6 +12,9 @@ import {
   EMPTY_DATA,
   type AppData,
   type ExerciseLog,
+  type Family,
+  type FamilyActivity,
+  type FamilyMember,
   type StorageAdapter,
   type UserSettings,
   type WeeklyLog,
@@ -19,6 +22,7 @@ import {
 import { LocalStorageAdapter } from "./storage/local";
 import { SupabaseStorageAdapter } from "./storage/supabase";
 import { supabase, isSupabaseConfigured } from "./supabase";
+import { getISOWeek } from "./utils";
 
 type AuthState =
   | { status: "loading" }
@@ -30,6 +34,8 @@ type StoreContextValue = {
   ready: boolean;
   adapterKind: "local" | "supabase";
   auth: AuthState;
+  migrationPending: AppData | null;
+  confirmMigration: (accept: boolean) => Promise<void>;
   signIn: (email: string, password: string) => Promise<string | null>;
   signUp: (email: string, password: string) => Promise<string | null>;
   signOut: () => Promise<void>;
@@ -40,6 +46,12 @@ type StoreContextValue = {
   getWeeklyLog: (week: number) => WeeklyLog | undefined;
   replaceData: (next: AppData) => void;
   resetData: () => void;
+  family: Family | null;
+  familyActivity: FamilyActivity[];
+  createFamily: (name: string, displayName: string) => Promise<string | null>;
+  joinFamily: (inviteCode: string, displayName: string) => Promise<string | null>;
+  leaveFamily: () => Promise<string | null>;
+  refreshFamily: () => Promise<void>;
 };
 
 const StoreContext = createContext<StoreContextValue | null>(null);
@@ -49,9 +61,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [auth, setAuth] = useState<AuthState>({ status: "loading" });
   const [data, setData] = useState<AppData>(EMPTY_DATA);
   const [ready, setReady] = useState(false);
+  const [migrationPending, setMigrationPending] = useState<AppData | null>(null);
+  const [family, setFamily] = useState<Family | null>(null);
+  const [familyActivity, setFamilyActivity] = useState<FamilyActivity[]>([]);
   const writeTimer = useRef<number | null>(null);
+  const pendingMigration = useRef<{ userId: string; email: string } | null>(null);
 
-  // Switch adapter and reload data whenever auth changes
   const switchAdapter = useCallback((next: StorageAdapter) => {
     setAdapter(next);
     setReady(false);
@@ -61,7 +76,47 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // Wire Supabase auth listener (or resolve immediately if not configured)
+  const refreshFamilyRef = useRef<(() => Promise<void>) | null>(null);
+
+  const handleSignedIn = useCallback(
+    async (userId: string, email: string, checkLocalData: boolean) => {
+      setAuth({ status: "signed-in", userId, email });
+
+      if (checkLocalData) {
+        const localData = await new LocalStorageAdapter().load();
+        const hasLocalData = localData.exerciseLogs.length > 0 || localData.weeklyLogs.length > 0;
+        if (hasLocalData) {
+          pendingMigration.current = { userId, email };
+          setMigrationPending(localData);
+          return;
+        }
+      }
+
+      switchAdapter(new SupabaseStorageAdapter(supabase!, userId));
+      refreshFamilyRef.current?.();
+    },
+    [switchAdapter],
+  );
+
+  const confirmMigration = useCallback(
+    async (accept: boolean) => {
+      const pending = pendingMigration.current;
+      if (!pending || !supabase) return;
+      const { userId } = pending;
+      pendingMigration.current = null;
+
+      if (accept && migrationPending) {
+        const tempAdapter = new SupabaseStorageAdapter(supabase, userId);
+        await tempAdapter.save(migrationPending);
+      }
+
+      setMigrationPending(null);
+      switchAdapter(new SupabaseStorageAdapter(supabase!, userId));
+      refreshFamilyRef.current?.();
+    },
+    [migrationPending, switchAdapter],
+  );
+
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) {
       setAuth({ status: "signed-out" });
@@ -69,30 +124,34 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    // Check existing session on mount
+    let initialCheckDone = false;
+
     supabase.auth.getSession().then(({ data: { session } }) => {
+      initialCheckDone = true;
       if (session?.user) {
-        setAuth({ status: "signed-in", userId: session.user.id, email: session.user.email ?? "" });
-        switchAdapter(new SupabaseStorageAdapter(supabase!, session.user.id));
+        handleSignedIn(session.user.id, session.user.email ?? "", false);
       } else {
         setAuth({ status: "signed-out" });
         switchAdapter(new LocalStorageAdapter());
       }
     });
 
-    // Listen for future auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        setAuth({ status: "signed-in", userId: session.user.id, email: session.user.email ?? "" });
-        switchAdapter(new SupabaseStorageAdapter(supabase!, session.user.id));
+        const checkLocal = initialCheckDone;
+        handleSignedIn(session.user.id, session.user.email ?? "", checkLocal);
       } else {
+        pendingMigration.current = null;
+        setMigrationPending(null);
         setAuth({ status: "signed-out" });
         switchAdapter(new LocalStorageAdapter());
+        setFamily(null);
+        setFamilyActivity([]);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [switchAdapter]);
+  }, [switchAdapter, handleSignedIn]);
 
   const schedulePersist = useCallback(
     (next: AppData) => {
@@ -115,7 +174,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [schedulePersist],
   );
 
-  // Auth actions — return error message or null
   const signIn = useCallback(async (email: string, password: string): Promise<string | null> => {
     if (!supabase) return "Supabase não configurado.";
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -186,7 +244,188 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [mutate],
   );
 
-  const resetData = useCallback<StoreContextValue["resetData"]>(() => mutate(() => structuredClone(EMPTY_DATA)), [mutate]);
+  const resetData = useCallback<StoreContextValue["resetData"]>(
+    () => mutate(() => structuredClone(EMPTY_DATA)),
+    [mutate],
+  );
+
+  const refreshFamily = useCallback(async (): Promise<void> => {
+    if (!supabase || !isSupabaseConfigured) return;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data: memberRows } = await supabase
+      .from("p_family_members")
+      .select("family_id")
+      .eq("user_id", user.id)
+      .limit(1);
+
+    if (!memberRows || memberRows.length === 0) {
+      setFamily(null);
+      setFamilyActivity([]);
+      return;
+    }
+
+    const familyId = memberRows[0].family_id as string;
+
+    const { data: familyRow } = await supabase
+      .from("p_families")
+      .select("id, name, owner_id, invite_code")
+      .eq("id", familyId)
+      .single();
+
+    if (!familyRow) {
+      setFamily(null);
+      setFamilyActivity([]);
+      return;
+    }
+
+    const { data: membersRows } = await supabase
+      .from("p_family_members")
+      .select("user_id, display_name, joined_at")
+      .eq("family_id", familyId);
+
+    const members: FamilyMember[] = (membersRows ?? []).map((m) => ({
+      userId: m.user_id as string,
+      displayName: m.display_name as string,
+      joinedAt: m.joined_at as string,
+    }));
+
+    setFamily({
+      id: familyRow.id as string,
+      name: familyRow.name as string,
+      ownerId: familyRow.owner_id as string,
+      inviteCode: familyRow.invite_code as string,
+      members,
+    });
+
+    const otherUserIds = members.map((m) => m.userId).filter((id) => id !== user.id);
+    if (otherUserIds.length === 0) {
+      setFamilyActivity([]);
+      return;
+    }
+
+    const currentWeek = getISOWeek();
+    const prevWeek = currentWeek > 1 ? currentWeek - 1 : 52;
+
+    const [{ data: exLogs }, { data: wkLogs }] = await Promise.all([
+      supabase
+        .from("p_exercise_logs")
+        .select("user_id, session_key, week, updated_at")
+        .in("user_id", otherUserIds)
+        .in("week", [currentWeek, prevWeek])
+        .eq("set_number", 0)
+        .order("updated_at", { ascending: false }),
+      supabase
+        .from("p_weekly_logs")
+        .select("user_id, week, updated_at")
+        .in("user_id", otherUserIds)
+        .in("week", [currentWeek, prevWeek])
+        .order("updated_at", { ascending: false }),
+    ]);
+
+    const displayNameMap = new Map(members.map((m) => [m.userId, m.displayName]));
+    const seen = new Set<string>();
+    const activities: FamilyActivity[] = [];
+
+    for (const row of exLogs ?? []) {
+      const key = `${row.user_id as string}-strength-${row.session_key as string}-${row.week as number}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const sessionType = (row.session_key as string).includes("lower") || (row.session_key as string).includes("upper") ? "strength" : "cardio";
+      activities.push({
+        userId: row.user_id as string,
+        displayName: displayNameMap.get(row.user_id as string) ?? "",
+        type: sessionType,
+        sessionKey: row.session_key as string,
+        week: row.week as number,
+        loggedAt: row.updated_at as string,
+      });
+    }
+
+    for (const row of wkLogs ?? []) {
+      const key = `${row.user_id as string}-weekly-${row.week as number}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      activities.push({
+        userId: row.user_id as string,
+        displayName: displayNameMap.get(row.user_id as string) ?? "",
+        type: "weekly",
+        week: row.week as number,
+        loggedAt: row.updated_at as string,
+      });
+    }
+
+    activities.sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime());
+    setFamilyActivity(activities);
+  }, []);
+
+  refreshFamilyRef.current = refreshFamily;
+
+  const createFamily = useCallback(async (name: string, displayName: string): Promise<string | null> => {
+    if (!supabase) return "Supabase não configurado.";
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return "Usuário não autenticado.";
+
+    const { data: familyRow, error: familyErr } = await supabase
+      .from("p_families")
+      .insert({ name, owner_id: user.id })
+      .select("id")
+      .single();
+
+    if (familyErr || !familyRow) return familyErr?.message ?? "Erro ao criar família.";
+
+    const { error: memberErr } = await supabase
+      .from("p_family_members")
+      .insert({ family_id: familyRow.id, user_id: user.id, display_name: displayName });
+
+    if (memberErr) return memberErr.message;
+
+    await refreshFamily();
+    return null;
+  }, [refreshFamily]);
+
+  const joinFamily = useCallback(async (inviteCode: string, displayName: string): Promise<string | null> => {
+    if (!supabase) return "Supabase não configurado.";
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return "Usuário não autenticado.";
+
+    const { data: familyRow, error: findErr } = await supabase
+      .from("p_families")
+      .select("id")
+      .eq("invite_code", inviteCode.trim().toLowerCase())
+      .single();
+
+    if (findErr || !familyRow) return "Código de convite inválido.";
+
+    const { error: memberErr } = await supabase
+      .from("p_family_members")
+      .insert({ family_id: familyRow.id, user_id: user.id, display_name: displayName });
+
+    if (memberErr) return memberErr.message;
+
+    await refreshFamily();
+    return null;
+  }, [refreshFamily]);
+
+  const leaveFamily = useCallback(async (): Promise<string | null> => {
+    if (!supabase) return "Supabase não configurado.";
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return "Usuário não autenticado.";
+    if (!family) return "Sem família para sair.";
+
+    const { error } = await supabase
+      .from("p_family_members")
+      .delete()
+      .eq("family_id", family.id)
+      .eq("user_id", user.id);
+
+    if (error) return error.message;
+
+    setFamily(null);
+    setFamilyActivity([]);
+    return null;
+  }, [family]);
 
   const value = useMemo<StoreContextValue>(
     () => ({
@@ -194,6 +433,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       ready,
       adapterKind: adapter.kind,
       auth,
+      migrationPending,
+      confirmMigration,
       signIn,
       signUp,
       signOut,
@@ -204,12 +445,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       getWeeklyLog,
       replaceData,
       resetData,
+      family,
+      familyActivity,
+      createFamily,
+      joinFamily,
+      leaveFamily,
+      refreshFamily,
     }),
     [
       data, ready, adapter.kind, auth,
+      migrationPending, confirmMigration,
       signIn, signUp, signOut,
       updateSettings, upsertExerciseLog, getExerciseLogs,
       upsertWeeklyLog, getWeeklyLog, replaceData, resetData,
+      family, familyActivity, createFamily, joinFamily, leaveFamily, refreshFamily,
     ],
   );
 
