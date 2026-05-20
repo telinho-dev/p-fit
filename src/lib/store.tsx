@@ -11,6 +11,7 @@ import {
 import {
   EMPTY_DATA,
   type AppData,
+  type DailyLog,
   type ExerciseLog,
   type Family,
   type FamilyActivity,
@@ -46,6 +47,8 @@ type StoreContextValue = {
   getWeeklyLog: (week: number) => WeeklyLog | undefined;
   replaceData: (next: AppData) => void;
   resetData: () => void;
+  getDailyLog: (date: string) => DailyLog | undefined;
+  upsertDailyLog: (log: DailyLog) => void;
   family: Family | null;
   familyActivity: FamilyActivity[];
   createFamily: (name: string, displayName: string) => Promise<string | null>;
@@ -249,6 +252,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [mutate],
   );
 
+  const getDailyLog = useCallback<StoreContextValue["getDailyLog"]>(
+    (date) => data.dailyLogs.find((l) => l.date === date),
+    [data.dailyLogs],
+  );
+
+  const upsertDailyLog = useCallback<StoreContextValue["upsertDailyLog"]>(
+    (log) =>
+      mutate((d) => {
+        const i = d.dailyLogs.findIndex((l) => l.date === log.date);
+        const next = d.dailyLogs.slice();
+        if (i === -1) next.push(log);
+        else next[i] = log;
+        return { ...d, dailyLogs: next };
+      }),
+    [mutate],
+  );
+
   const refreshFamily = useCallback(async (): Promise<void> => {
     if (!supabase || !isSupabaseConfigured) return;
     const { data: { user } } = await supabase.auth.getUser();
@@ -445,6 +465,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       getWeeklyLog,
       replaceData,
       resetData,
+      getDailyLog,
+      upsertDailyLog,
       family,
       familyActivity,
       createFamily,
@@ -458,6 +480,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       signIn, signUp, signOut,
       updateSettings, upsertExerciseLog, getExerciseLogs,
       upsertWeeklyLog, getWeeklyLog, replaceData, resetData,
+      getDailyLog, upsertDailyLog,
       family, familyActivity, createFamily, joinFamily, leaveFamily, refreshFamily,
     ],
   );

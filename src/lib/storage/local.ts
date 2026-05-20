@@ -9,9 +9,13 @@ export class LocalStorageAdapter implements StorageAdapter {
     const raw = localStorage.getItem(KEY);
     if (!raw) return structuredClone(EMPTY_DATA);
     try {
-      const parsed = JSON.parse(raw) as AppData;
+      const parsed = JSON.parse(raw);
       if (parsed.version !== 1) return structuredClone(EMPTY_DATA);
-      return parsed;
+      return {
+        ...structuredClone(EMPTY_DATA),
+        ...parsed,
+        settings: { ...structuredClone(EMPTY_DATA).settings, ...parsed.settings },
+      };
     } catch {
       return structuredClone(EMPTY_DATA);
     }
