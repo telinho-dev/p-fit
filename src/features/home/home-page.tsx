@@ -7,6 +7,7 @@ import { type FamilyActivity } from "@/lib/storage/types";
 import { MultiRing } from "@/components/ui/ring";
 import { Badge } from "@/components/ui/badge";
 import { cn, getISOWeek } from "@/lib/utils";
+import { DailyCard } from "./daily-card";
 
 const dayToSessionKey: Record<string, StrengthSession["key"] | undefined> = {
   Segunda: "lower-a",
@@ -83,6 +84,9 @@ export function HomePage() {
           </ul>
         </div>
       </section>
+
+      {/* Daily habits card */}
+      <DailyCard />
 
       {/* Family activity feed */}
       {family !== null && familyActivity.length > 0 && (

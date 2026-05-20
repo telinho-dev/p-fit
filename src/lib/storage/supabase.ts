@@ -9,6 +9,7 @@ type SettingsRow = {
   current_weight_kg: number | null;
   target_weight_kg: number | null;
   start_date: string | null;
+  hydration_target_ml: number | null;
 };
 
 type ExerciseLogRow = {
@@ -34,6 +35,15 @@ type WeeklyLogRow = {
   notes: string;
 };
 
+type DailyLogRow = {
+  user_id: string;
+  date: string;
+  hydration_ml: number;
+  creatine_done: boolean;
+  protein_on_target: boolean;
+  sleep_ok: boolean;
+};
+
 export class SupabaseStorageAdapter implements StorageAdapter {
   readonly kind = "supabase" as const;
 
@@ -43,10 +53,11 @@ export class SupabaseStorageAdapter implements StorageAdapter {
   ) {}
 
   async load(): Promise<AppData> {
-    const [settings, exerciseLogs, weeklyLogs] = await Promise.all([
+    const [settings, exerciseLogs, weeklyLogs, dailyLogs] = await Promise.all([
       this.client.from("p_user_settings").select("*").eq("user_id", this.userId).maybeSingle(),
       this.client.from("p_exercise_logs").select("*").eq("user_id", this.userId),
       this.client.from("p_weekly_logs").select("*").eq("user_id", this.userId),
+      this.client.from("p_daily_logs").select("*").eq("user_id", this.userId),
     ]);
 
     const data: AppData = structuredClone(EMPTY_DATA);
@@ -59,6 +70,7 @@ export class SupabaseStorageAdapter implements StorageAdapter {
         currentWeightKg: s.current_weight_kg,
         targetWeightKg: s.target_weight_kg,
         startDate: s.start_date,
+        hydrationTargetMl: s.hydration_target_ml,
       };
     }
 
@@ -85,6 +97,15 @@ export class SupabaseStorageAdapter implements StorageAdapter {
       notes: r.notes,
     }));
 
+    const dl = (dailyLogs.data ?? []) as DailyLogRow[];
+    data.dailyLogs = dl.map((r) => ({
+      date: r.date,
+      hydrationMl: r.hydration_ml,
+      creatineDone: r.creatine_done,
+      proteinOnTarget: r.protein_on_target,
+      sleepOk: r.sleep_ok,
+    }));
+
     return data;
   }
 
@@ -97,6 +118,7 @@ export class SupabaseStorageAdapter implements StorageAdapter {
         current_weight_kg: data.settings.currentWeightKg,
         target_weight_kg: data.settings.targetWeightKg,
         start_date: data.settings.startDate,
+        hydration_target_ml: data.settings.hydrationTargetMl,
       } satisfies SettingsRow),
       data.exerciseLogs.length > 0
         ? this.client.from("p_exercise_logs").upsert(
@@ -130,6 +152,21 @@ export class SupabaseStorageAdapter implements StorageAdapter {
                   sleep_avg: w.sleepAvg,
                   notes: w.notes,
                 }) satisfies WeeklyLogRow,
+            ),
+          )
+        : Promise.resolve(),
+      data.dailyLogs.length > 0
+        ? this.client.from("p_daily_logs").upsert(
+            data.dailyLogs.map(
+              (d) =>
+                ({
+                  user_id: this.userId,
+                  date: d.date,
+                  hydration_ml: d.hydrationMl,
+                  creatine_done: d.creatineDone,
+                  protein_on_target: d.proteinOnTarget,
+                  sleep_ok: d.sleepOk,
+                }) satisfies DailyLogRow,
             ),
           )
         : Promise.resolve(),

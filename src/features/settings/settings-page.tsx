@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 export function SettingsPage() {
-  const { auth, signIn, signUp, signOut, adapterKind } = useStore();
+  const { auth, signIn, signUp, signOut, adapterKind, data, updateSettings } = useStore();
 
   return (
     <div className="space-y-6">
@@ -54,6 +54,25 @@ export function SettingsPage() {
       ) : (
         <AuthForm onSignIn={signIn} onSignUp={signUp} />
       )}
+
+      {/* Daily goals */}
+      <div className="rounded-2xl border border-(--color-line) bg-(--color-panel) overflow-hidden">
+        <div className="px-4 py-3 border-b border-(--color-line)">
+          <p className="font-display text-[14px] font-semibold text-(--color-ink)">Metas Diárias</p>
+        </div>
+        <div className="px-4 py-4 space-y-1.5">
+          <Label htmlFor="hydration-target">Meta de hidratação (mL)</Label>
+          <Input
+            id="hydration-target"
+            type="number"
+            placeholder="2500"
+            value={data.settings.hydrationTargetMl ?? ""}
+            onChange={(e) =>
+              updateSettings({ hydrationTargetMl: Number(e.target.value) || null })
+            }
+          />
+        </div>
+      </div>
 
       {/* Data management */}
       <DataCard />

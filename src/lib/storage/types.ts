@@ -25,6 +25,15 @@ export type UserSettings = {
   currentWeightKg: number | null;
   targetWeightKg: number | null;
   startDate: string | null; // ISO yyyy-mm-dd, used to compute "current week"
+  hydrationTargetMl: number | null;
+};
+
+export type DailyLog = {
+  date: string;
+  hydrationMl: number;
+  creatineDone: boolean;
+  proteinOnTarget: boolean;
+  sleepOk: boolean;
 };
 
 export type AppData = {
@@ -32,6 +41,7 @@ export type AppData = {
   settings: UserSettings;
   exerciseLogs: ExerciseLog[];
   weeklyLogs: WeeklyLog[];
+  dailyLogs: DailyLog[];
 };
 
 export const EMPTY_DATA: AppData = {
@@ -42,9 +52,11 @@ export const EMPTY_DATA: AppData = {
     currentWeightKg: 109,
     targetWeightKg: 95,
     startDate: null,
+    hydrationTargetMl: null,
   },
   exerciseLogs: [],
   weeklyLogs: [],
+  dailyLogs: [],
 };
 
 export interface StorageAdapter {
