@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { Check, ChevronDown, ChevronLeft, ChevronRight, Menu, Timer } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, ImageUp, Menu, Timer } from "lucide-react";
 import { STRENGTH_SESSIONS, type StrengthSession, type Exercise } from "@/lib/plan/data";
 import { useStore } from "@/lib/store";
 import { Input, Textarea } from "@/components/ui/input";
@@ -104,24 +104,34 @@ export function StrengthPage() {
             <ChevronDown size={13} className="text-(--color-ink-mute)" />
           </button>
 
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-1.5">
             <button
-              onClick={() => setWeek((w) => Math.max(1, w - 1))}
-              aria-label="Semana anterior"
+              onClick={() => navigate("/import")}
+              aria-label="Importar print"
               className="grid place-items-center h-8 w-8 rounded-lg text-(--color-ink-dim) hover:bg-(--color-panel-2) hover:text-(--color-ink) transition-colors"
             >
-              <ChevronLeft size={17} />
+              <ImageUp size={17} />
             </button>
-            <span className="stat-num text-[14px] w-10 text-center text-(--color-ink)">
-              W{String(week).padStart(2, "0")}
-            </span>
-            <button
-              onClick={() => setWeek((w) => Math.min(53, w + 1))}
-              aria-label="Próxima semana"
-              className="grid place-items-center h-8 w-8 rounded-lg text-(--color-ink-dim) hover:bg-(--color-panel-2) hover:text-(--color-ink) transition-colors"
-            >
-              <ChevronRight size={17} />
-            </button>
+
+            <div className="flex items-center gap-0.5">
+              <button
+                onClick={() => setWeek((w) => Math.max(1, w - 1))}
+                aria-label="Semana anterior"
+                className="grid place-items-center h-8 w-8 rounded-lg text-(--color-ink-dim) hover:bg-(--color-panel-2) hover:text-(--color-ink) transition-colors"
+              >
+                <ChevronLeft size={17} />
+              </button>
+              <span className="stat-num text-[14px] w-10 text-center text-(--color-ink)">
+                W{String(week).padStart(2, "0")}
+              </span>
+              <button
+                onClick={() => setWeek((w) => Math.min(53, w + 1))}
+                aria-label="Próxima semana"
+                className="grid place-items-center h-8 w-8 rounded-lg text-(--color-ink-dim) hover:bg-(--color-panel-2) hover:text-(--color-ink) transition-colors"
+              >
+                <ChevronRight size={17} />
+              </button>
+            </div>
           </div>
         </div>
 

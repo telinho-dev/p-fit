@@ -7,6 +7,7 @@ import { WeeklyPage } from "./features/weekly/weekly-page";
 import { NutritionPage } from "./features/nutrition/nutrition-page";
 import { SettingsPage } from "./features/settings/settings-page";
 import { FamilyPage } from "./features/family/family-page";
+import { ImportPage } from "./features/import/import-page";
 
 export const router = createBrowserRouter([
   {
@@ -21,6 +22,7 @@ export const router = createBrowserRouter([
       { path: "nutrition", element: <NutritionPage /> },
       { path: "family", element: <FamilyPage /> },
       { path: "settings", element: <SettingsPage /> },
+      { path: "import", element: <ImportPage /> },
     ],
   },
 ]);
