@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+@theme {
+  /* OLED-deep black with subtle warmth */
+  --color-bg: #08080a;
+  --color-bg-2: #0e0e12;
+  --color-panel: #14141a;
+  --color-panel-2: #1c1c24;
+  --color-panel-3: #24242e;
+  --color-line: #2a2a36;
+  --color-line-strong: #3a3a48;
+  --color-ink: #f8f8fa;
+  --color-ink-dim: #a8a8b4;
+  --color-ink-mute: #6c6c78;
+
+  /* Sport accents — Strava-coded tangerine + Nike-coded lime + Apple-fitness red */
+  --color-flame: #ff5722;
+  --color-flame-2: #ff7a45;
+  --color-flame-soft: rgba(255, 87, 34, 0.14);
+  --color-lime: #b5ea3a;
+  --color-lime-2: #c8f25a;
+  --color-lime-soft: rgba(181, 234, 58, 0.14);
+  --color-rose: #ff3b30;
+  --color-rose-soft: rgba(255, 59, 48, 0.14);
+  --color-warn: #ffb020;
+  --color-cyan: #5ad6ff;
+
+  --font-display: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 26px;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    font-feature-settings: "ss01", "ss02";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--color-flame);
+    color: var(--color-ink);
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer components {
+  /* Bricolage variations — let the OPSZ axis breathe at display sizes */
+  .display {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-variation-settings:
+      "wdth" 100,
+      "GRAD" 0;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+  }
+  .display-compact {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-variation-settings:
+      "wdth" 85,
+      "GRAD" 0;
+    letter-spacing: -0.015em;
+    font-weight: 700;
+  }
+  .nums {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum", "zero", "ss01";
+  }
+  .stat-num {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-variation-settings:
+      "wdth" 90,
+      "GRAD" 50;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum", "zero";
+    font-weight: 700;
+    letter-spacing: -0.035em;
+  }
+  .micro-label {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-weight: 600;
+    font-size: 10.5px;
+  }
+
+  /* Activity-ring style focus on numeric inputs */
+  .field {
+    background: var(--color-panel-2);
+    color: var(--color-ink);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-variant-numeric: tabular-nums;
+    width: 100%;
+    transition:
+      border-color 140ms ease,
+      background 140ms ease;
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-flame);
+    background: var(--color-panel-3);
+  }
+  .field::placeholder {
+    color: var(--color-ink-mute);
+    font-weight: 500;
+  }
+
+  /* iOS safe-area for floating bottom nav */
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+  }
+
+  /* "Glass" panel for floating elements */
+  .glass {
+    background: rgba(20, 20, 26, 0.78);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    backdrop-filter: blur(20px) saturate(160%);
+    border: 1px solid var(--color-line);
+  }
+
+  /* Sport gradient pads — for activity headers */
+  .grad-flame {
+    background:
+      radial-gradient(at top right, rgba(255, 122, 69, 0.45), transparent 60%),
+      linear-gradient(135deg, #2a1410, #15080a);
+  }
+  .grad-lime {
+    background:
+      radial-gradient(at top right, rgba(181, 234, 58, 0.3), transparent 60%),
+      linear-gradient(135deg, #1a2210, #0e1408);
+  }
+  .grad-cyan {
+    background:
+      radial-gradient(at top right, rgba(90, 214, 255, 0.28), transparent 60%),
+      linear-gradient(135deg, #0e1c24, #06121a);
+  }
+  .grad-violet {
+    background:
+      radial-gradient(at top right, rgba(168, 110, 255, 0.32), transparent 60%),
+      linear-gradient(135deg, #1a1230, #0c0820);
+  }
+}

@@ -1,0 +1,685 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f3ede0" />
+<title>Upper A · Terça · p · fit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,400..900,30;1,9..144,400..700,30&family=Hanken+Grotesk:wght@300..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f3ede0;
+    --paper-2: #ede4d0;
+    --paper-3: #e3d8bf;
+    --ink: #1a2034;
+    --ink-2: #2d3346;
+    --ink-dim: #5d6175;
+    --ink-mute: #8b8d96;
+    --rule: rgba(26, 32, 52, 0.14);
+    --rule-strong: rgba(26, 32, 52, 0.38);
+    --accent: #b6452f;
+    --accent-deep: #8a2f1f;
+    --warn: #b07520;
+    --good: #3a6b4e;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); }
+  body {
+    font-family: "Hanken Grotesk", ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-size: 14px; line-height: 1.4;
+    padding-bottom: 6rem;
+    font-feature-settings: "ss03", "tnum";
+  }
+  ::selection { background: var(--accent); color: var(--paper); }
+  .container { max-width: 640px; margin: 0 auto; padding: 0 14px; }
+  .display { font-family: "Fraunces", Georgia, serif; font-optical-sizing: auto; font-variation-settings: "SOFT" 30; }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  .kicker { font-size: 10.5px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-2); }
+  .kicker-dim { font-size: 10.5px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-mute); }
+  .ord { font-family: "Fraunces", Georgia, serif; font-style: italic; font-weight: 500; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+
+  /* Masthead */
+  header.masthead {
+    position: sticky; top: 0; z-index: 30;
+    background: rgba(243, 237, 224, 0.96);
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    border-bottom: 1.5px solid var(--ink);
+  }
+  .masthead .top { display: flex; justify-content: space-between; align-items: baseline; padding: 14px 14px 4px; }
+  .masthead .bottom { display: flex; justify-content: space-between; align-items: flex-end; padding: 0 14px 10px; gap: 12px; }
+  .wordmark { font-family: "Fraunces", Georgia, serif; font-size: 34px; line-height: 1; letter-spacing: -0.02em; font-weight: 500; color: var(--ink); }
+  .wordmark .italic { font-style: italic; }
+  .wordmark .dot { color: var(--accent); }
+  .meta-right { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+  .meta-right .date { font-family: "Fraunces", serif; font-size: 12px; font-style: italic; color: var(--ink-dim); }
+
+  /* Timer bar */
+  .timer {
+    position: sticky; top: 80px; z-index: 25;
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule-strong);
+    padding: 10px 14px;
+  }
+  .timer-inner { max-width: 640px; margin: 0 auto; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .timer-label { display: flex; flex-direction: column; gap: 0; min-width: 92px; }
+  .timer-label .kicker-dim { font-size: 9px; }
+  .timer-display {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 38px; font-weight: 500; line-height: 1; letter-spacing: -0.025em;
+    color: var(--ink); font-variant-numeric: tabular-nums;
+  }
+  .timer-display.running { color: var(--accent); }
+  .timer-display.done { color: var(--accent-deep); animation: pulse 0.7s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1 } 50% { opacity: 0.35 } }
+  .timer-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+  .timer-actions.hidden { display: none; }
+
+  /* Buttons — editorial */
+  .btn {
+    appearance: none; -webkit-appearance: none; border: none; cursor: pointer;
+    background: transparent;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 500;
+    padding: 6px 10px; line-height: 1;
+    border: 1px solid var(--ink); color: var(--ink);
+    transition: all 120ms ease;
+  }
+  .btn:hover { background: var(--ink); color: var(--paper); }
+  .btn-accent { border-color: var(--accent); color: var(--accent); }
+  .btn-accent:hover { background: var(--accent); color: var(--paper); }
+  .btn-ghost { border-color: transparent; color: var(--ink-dim); }
+  .btn-ghost:hover { background: transparent; color: var(--accent); text-decoration: underline; text-underline-offset: 4px; }
+
+  /* Week selector */
+  .week-select {
+    background: transparent; color: var(--ink); border: none;
+    border-bottom: 1.5px solid var(--rule-strong);
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.06em;
+    padding: 4px 18px 4px 2px; appearance: none; -webkit-appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--ink) 50%), linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+    background-position: calc(100% - 8px) 50%, calc(100% - 4px) 50%;
+    background-size: 4px 4px, 4px 4px;
+    background-repeat: no-repeat;
+  }
+
+  /* Session lede */
+  main { padding-top: 14px; }
+  .lede { padding: 0 14px; margin-bottom: 28px; }
+  .lede .day-tag { display: flex; justify-content: space-between; align-items: baseline; }
+  .lede .day-tag .kicker { color: var(--accent); }
+  .lede h2 {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 44px; line-height: 0.95; letter-spacing: -0.025em; font-weight: 500;
+    margin: 10px 0 8px; color: var(--ink);
+  }
+  .lede h2 .italic { font-style: italic; }
+  .lede .standfirst { font-family: "Fraunces", serif; font-style: italic; font-size: 15px; line-height: 1.35; color: var(--ink-dim); max-width: 56ch; }
+
+  /* Exercise entry */
+  .exercise {
+    padding: 14px 14px 0;
+    border-top: 1.5px solid var(--ink);
+    margin-top: 26px;
+  }
+  .exercise:first-of-type { margin-top: 0; }
+  .ex-head { display: grid; grid-template-columns: 48px 1fr; gap: 12px; align-items: start; }
+  .ex-num { font-family: "Fraunces", serif; font-style: italic; font-weight: 500; font-size: 38px; line-height: 1; letter-spacing: -0.025em; color: var(--accent); padding-top: 2px; }
+  .ex-body { min-width: 0; }
+  .ex-title-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .ex-title { font-family: "Fraunces", serif; font-size: 20px; font-weight: 500; line-height: 1.15; color: var(--ink); }
+  .ex-meta { display: flex; flex-wrap: wrap; gap: 14px; padding-top: 4px; }
+  .ex-meta .meta-row { display: inline-flex; align-items: baseline; gap: 5px; }
+  .ex-note { font-family: "Fraunces", serif; font-style: italic; font-size: 13.5px; line-height: 1.35; color: var(--ink-dim); margin: 6px 0 0; max-width: 56ch; }
+  .tag-core {
+    font-family: "IBM Plex Mono", monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--warn);
+  }
+
+  /* Score sheet */
+  .sets { margin: 14px 0 0; padding-left: 60px; display: grid; gap: 0; }
+  .set-head, .set-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 1fr 56px 38px;
+    gap: 10px; align-items: baseline;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .set-head {
+    border-bottom: 1px solid var(--rule-strong);
+    padding-bottom: 5px;
+  }
+  .set-head span {
+    font-family: "IBM Plex Mono", monospace; font-size: 9.5px; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-mute);
+  }
+  .set-num {
+    font-family: "Fraunces", serif; font-style: italic; font-weight: 500; font-size: 19px;
+    color: var(--ink-mute); font-variant-numeric: tabular-nums;
+  }
+  .set-row.done .set-num { color: var(--accent); }
+  .set-row input, .set-row select {
+    appearance: none; -webkit-appearance: none;
+    background: transparent; border: none;
+    border-bottom: 1px solid var(--rule-strong);
+    color: var(--ink);
+    font-family: "IBM Plex Mono", monospace; font-size: 14px; font-variant-numeric: tabular-nums;
+    padding: 4px 2px;
+    width: 100%; min-width: 0;
+    border-radius: 0;
+  }
+  .set-row select {
+    font-size: 12px; padding-right: 14px;
+    background-image: linear-gradient(45deg, transparent 50%, var(--ink-dim) 50%), linear-gradient(135deg, var(--ink-dim) 50%, transparent 50%);
+    background-position: calc(100% - 7px) 50%, calc(100% - 4px) 50%;
+    background-size: 4px 4px, 4px 4px;
+    background-repeat: no-repeat;
+  }
+  .set-row input:focus, .set-row select:focus { outline: none; border-bottom-color: var(--accent); }
+  .set-row input::placeholder {
+    color: var(--ink-mute); font-family: "Fraunces", serif; font-style: italic;
+  }
+  .set-check {
+    width: 28px; height: 28px;
+    background: transparent; border: 1.5px solid var(--rule-strong); color: var(--ink-mute);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-family: "Fraunces", serif; font-size: 18px; line-height: 1;
+    transition: all 120ms ease;
+    padding: 0;
+  }
+  .set-check:hover { border-color: var(--ink); color: var(--ink); }
+  .set-row.done .set-check { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+
+  .obs-row { margin: 14px 0 0; padding-left: 60px; display: flex; flex-direction: column; gap: 6px; }
+  .obs-row label {
+    font-family: "Hanken Grotesk", sans-serif; font-size: 10.5px; font-weight: 600;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--ink-mute);
+  }
+  .obs-row textarea {
+    background: var(--paper-2); color: var(--ink); border: 1px solid var(--rule-strong);
+    font: inherit; font-size: 13px; line-height: 1.4;
+    padding: 8px 10px; width: 100%; resize: vertical; min-height: 56px;
+    border-radius: 0;
+  }
+  .obs-row textarea:focus { outline: none; border-color: var(--accent); }
+  .obs-row textarea::placeholder { font-family: "Fraunces", serif; font-style: italic; color: var(--ink-mute); }
+
+  /* Footnotes */
+  .footnotes { padding: 24px 14px 0; margin-top: 30px; border-top: 2px solid var(--ink); }
+  .footnotes ul { margin: 8px 0 0; padding: 0; list-style: none; }
+  .footnotes li { font-family: "Fraunces", serif; font-style: italic; font-size: 13px; line-height: 1.45; color: var(--ink-dim); padding: 3px 0; }
+
+  /* Colophon */
+  .colophon { padding: 30px 14px 0; text-align: center; }
+  .colophon .count {
+    font-family: "Fraunces", serif; font-size: 14px; font-style: italic; color: var(--ink-dim);
+  }
+  .colophon .count strong { font-style: normal; font-weight: 600; color: var(--ink); font-family: "IBM Plex Mono", monospace; font-size: 13px; }
+  .colophon .reset-wrap { margin-top: 12px; }
+
+  @media (max-width: 380px) {
+    .wordmark { font-size: 28px; }
+    .lede h2 { font-size: 36px; }
+    .ex-num { font-size: 30px; }
+    .timer-display { font-size: 32px; }
+    .sets, .obs-row { padding-left: 0; }
+    .ex-head { grid-template-columns: 40px 1fr; gap: 10px; }
+    .set-head, .set-row { grid-template-columns: 24px 1fr 1fr 50px 34px; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="top container">
+    <span class="kicker">Diário de treino</span>
+    <span class="kicker-dim mono" style="text-transform:none">Vol. I · nº 02</span>
+  </div>
+  <div class="bottom container">
+    <h1 class="wordmark"><span class="italic">p</span><span class="dot">·</span><span class="italic">fit</span></h1>
+    <div class="meta-right">
+      <span class="date">Terça · sessão upper A</span>
+      <select class="week-select" id="weekSelect" aria-label="Semana">
+        <option value="1">Semana 01</option><option value="2">Semana 02</option><option value="3">Semana 03</option>
+        <option value="4">Semana 04</option><option value="5">Semana 05</option><option value="6">Semana 06</option>
+        <option value="7">Semana 07</option><option value="8">Semana 08</option><option value="9">Semana 09</option>
+        <option value="10">Semana 10</option><option value="11">Semana 11</option><option value="12">Semana 12</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+<div class="timer">
+  <div class="timer-inner">
+    <div class="timer-label">
+      <span class="kicker-dim">Descanso</span>
+      <span class="timer-display" id="timerDisplay">00:00</span>
+    </div>
+    <div class="timer-actions" id="timerActions">
+      <button class="btn" data-rest="60">60 s</button>
+      <button class="btn" data-rest="90">90 s</button>
+      <button class="btn" data-rest="120">2 min</button>
+      <button class="btn" data-rest="180">3 min</button>
+    </div>
+    <div class="timer-actions hidden" id="timerRunActions">
+      <button class="btn" id="addTime">+30s</button>
+      <button class="btn" id="pauseResume">Pausa</button>
+      <button class="btn btn-accent" id="stopTimer">Parar</button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <!-- LEDE -->
+  <section class="lede">
+    <div class="day-tag">
+      <span class="kicker">Terça</span>
+      <span class="kicker-dim mono" style="text-transform:none">Sessão ii de iv</span>
+    </div>
+    <h2><span class="italic">Upper</span> A.</h2>
+    <p class="standfirst">Foco em supino e desenvolvimento. Peito e ombro como peças principais; remada e tríceps de apoio; uma série de oblíquo no fim para fechar a edição.</p>
+  </section>
+
+  <!-- EXERCISES (hardcoded so the page reads without JS) -->
+
+  <article class="exercise" data-ex="supino-reto" data-rest="150">
+    <div class="ex-head">
+      <span class="ex-num">01</span>
+      <div class="ex-body">
+        <div class="ex-title-row"><h3 class="ex-title">Supino reto (barra ou halter)</h3></div>
+        <div class="ex-meta">
+          <span class="meta-row"><span class="kicker-dim">séries</span><span class="mono">4</span></span>
+          <span class="meta-row"><span class="kicker-dim">reps</span><span class="mono">6–8</span></span>
+          <span class="meta-row"><span class="kicker-dim">descanso</span><span class="mono">2–3 min</span></span>
+        </div>
+        <p class="ex-note">Composto principal. Halteres = mais ROM, menos lesão de ombro.</p>
+      </div>
+    </div>
+    <div class="sets">
+      <div class="set-head"><span>nº</span><span>Carga</span><span>Reps</span><span>RIR</span><span></span></div>
+      <div class="set-row" data-set="1"><span class="set-num">i</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="6–8" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+      <div class="set-row" data-set="2"><span class="set-num">ii</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="6–8" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+      <div class="set-row" data-set="3"><span class="set-num">iii</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="6–8" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+      <div class="set-row" data-set="4"><span class="set-num">iv</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="6–8" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+    </div>
+    <div class="obs-row"><label>Observações</label><textarea data-field="notes" placeholder="técnica, dor, drop, etc."></textarea></div>
+  </article>
+
+  <article class="exercise" data-ex="desenvolvimento" data-rest="120">
+    <div class="ex-head">
+      <span class="ex-num">02</span>
+      <div class="ex-body">
+        <div class="ex-title-row"><h3 class="ex-title">Desenvolvimento halter sentado</h3></div>
+        <div class="ex-meta">
+          <span class="meta-row"><span class="kicker-dim">séries</span><span class="mono">3</span></span>
+          <span class="meta-row"><span class="kicker-dim">reps</span><span class="mono">8–10</span></span>
+          <span class="meta-row"><span class="kicker-dim">descanso</span><span class="mono">2 min</span></span>
+        </div>
+        <p class="ex-note">Banco com encosto a 80–85°. Cuidar do ombro.</p>
+      </div>
+    </div>
+    <div class="sets">
+      <div class="set-head"><span>nº</span><span>Carga</span><span>Reps</span><span>RIR</span><span></span></div>
+      <div class="set-row" data-set="1"><span class="set-num">i</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="8–10" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+      <div class="set-row" data-set="2"><span class="set-num">ii</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="8–10" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+      <div class="set-row" data-set="3"><span class="set-num">iii</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="8–10" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+    </div>
+    <div class="obs-row"><label>Observações</label><textarea data-field="notes" placeholder="técnica, dor, drop, etc."></textarea></div>
+  </article>
+
+  <article class="exercise" data-ex="supino-inclinado" data-rest="90">
+    <div class="ex-head">
+      <span class="ex-num">03</span>
+      <div class="ex-body">
+        <div class="ex-title-row"><h3 class="ex-title">Supino inclinado halter (30–45°)</h3></div>
+        <div class="ex-meta">
+          <span class="meta-row"><span class="kicker-dim">séries</span><span class="mono">3</span></span>
+          <span class="meta-row"><span class="kicker-dim">reps</span><span class="mono">10–12</span></span>
+          <span class="meta-row"><span class="kicker-dim">descanso</span><span class="mono">90 s</span></span>
+        </div>
+        <p class="ex-note">Foco no peitoral superior.</p>
+      </div>
+    </div>
+    <div class="sets">
+      <div class="set-head"><span>nº</span><span>Carga</span><span>Reps</span><span>RIR</span><span></span></div>
+      <div class="set-row" data-set="1"><span class="set-num">i</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="10–12" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+      <div class="set-row" data-set="2"><span class="set-num">ii</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="10–12" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+      <div class="set-row" data-set="3"><span class="set-num">iii</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="10–12" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+    </div>
+    <div class="obs-row"><label>Observações</label><textarea data-field="notes" placeholder="técnica, dor, drop, etc."></textarea></div>
+  </article>
+
+  <article class="exercise" data-ex="remada-cavalinho" data-rest="90">
+    <div class="ex-head">
+      <span class="ex-num">04</span>
+      <div class="ex-body">
+        <div class="ex-title-row"><h3 class="ex-title">Remada cavalinho (ou remada baixa)</h3></div>
+        <div class="ex-meta">
+          <span class="meta-row"><span class="kicker-dim">séries</span><span class="mono">3</span></span>
+          <span class="meta-row"><span class="kicker-dim">reps</span><span class="mono">10–12</span></span>
+          <span class="meta-row"><span class="kicker-dim">descanso</span><span class="mono">90 s</span></span>
+        </div>
+        <p class="ex-note">Antagonista, mantém saúde do ombro.</p>
+      </div>
+    </div>
+    <div class="sets">
+      <div class="set-head"><span>nº</span><span>Carga</span><span>Reps</span><span>RIR</span><span></span></div>
+      <div class="set-row" data-set="1"><span class="set-num">i</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="10–12" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+      <div class="set-row" data-set="2"><span class="set-num">ii</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="10–12" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+      <div class="set-row" data-set="3"><span class="set-num">iii</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="10–12" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+    </div>
+    <div class="obs-row"><label>Observações</label><textarea data-field="notes" placeholder="técnica, dor, drop, etc."></textarea></div>
+  </article>
+
+  <article class="exercise" data-ex="elevacao-lateral" data-rest="60">
+    <div class="ex-head">
+      <span class="ex-num">05</span>
+      <div class="ex-body">
+        <div class="ex-title-row"><h3 class="ex-title">Elevação lateral halter</h3></div>
+        <div class="ex-meta">
+          <span class="meta-row"><span class="kicker-dim">séries</span><span class="mono">3</span></span>
+          <span class="meta-row"><span class="kicker-dim">reps</span><span class="mono">12–15</span></span>
+          <span class="meta-row"><span class="kicker-dim">descanso</span><span class="mono">60 s</span></span>
+        </div>
+        <p class="ex-note">Cotovelo levemente flexionado, sobe até a altura do ombro.</p>
+      </div>
+    </div>
+    <div class="sets">
+      <div class="set-head"><span>nº</span><span>Carga</span><span>Reps</span><span>RIR</span><span></span></div>
+      <div class="set-row" data-set="1"><span class="set-num">i</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="12–15" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+      <div class="set-row" data-set="2"><span class="set-num">ii</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="12–15" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+      <div class="set-row" data-set="3"><span class="set-num">iii</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="12–15" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+    </div>
+    <div class="obs-row"><label>Observações</label><textarea data-field="notes" placeholder="técnica, dor, drop, etc."></textarea></div>
+  </article>
+
+  <article class="exercise" data-ex="triceps-corda" data-rest="75">
+    <div class="ex-head">
+      <span class="ex-num">06</span>
+      <div class="ex-body">
+        <div class="ex-title-row"><h3 class="ex-title">Tríceps na corda (ou francês halter)</h3></div>
+        <div class="ex-meta">
+          <span class="meta-row"><span class="kicker-dim">séries</span><span class="mono">3</span></span>
+          <span class="meta-row"><span class="kicker-dim">reps</span><span class="mono">10–12</span></span>
+          <span class="meta-row"><span class="kicker-dim">descanso</span><span class="mono">60–90 s</span></span>
+        </div>
+        <p class="ex-note">Estender totalmente o cotovelo no final.</p>
+      </div>
+    </div>
+    <div class="sets">
+      <div class="set-head"><span>nº</span><span>Carga</span><span>Reps</span><span>RIR</span><span></span></div>
+      <div class="set-row" data-set="1"><span class="set-num">i</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="10–12" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+      <div class="set-row" data-set="2"><span class="set-num">ii</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="10–12" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+      <div class="set-row" data-set="3"><span class="set-num">iii</span><input type="text" inputmode="decimal" placeholder="kg" data-field="carga"><input type="text" inputmode="numeric" placeholder="10–12" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+    </div>
+    <div class="obs-row"><label>Observações</label><textarea data-field="notes" placeholder="técnica, dor, drop, etc."></textarea></div>
+  </article>
+
+  <article class="exercise" data-ex="prancha-lateral" data-rest="60">
+    <div class="ex-head">
+      <span class="ex-num">07</span>
+      <div class="ex-body">
+        <div class="ex-title-row">
+          <h3 class="ex-title">Prancha lateral (cada lado)</h3>
+          <span class="tag-core">core</span>
+        </div>
+        <div class="ex-meta">
+          <span class="meta-row"><span class="kicker-dim">séries</span><span class="mono">3</span></span>
+          <span class="meta-row"><span class="kicker-dim">tempo</span><span class="mono">30–45 s</span></span>
+          <span class="meta-row"><span class="kicker-dim">descanso</span><span class="mono">60 s</span></span>
+        </div>
+        <p class="ex-note">CORE — oblíquos. Uma série por lado.</p>
+      </div>
+    </div>
+    <div class="sets">
+      <div class="set-head"><span>nº</span><span>Carga</span><span>Tempo</span><span>RIR</span><span></span></div>
+      <div class="set-row" data-set="1"><span class="set-num">i</span><input type="text" inputmode="decimal" placeholder="—" data-field="carga"><input type="text" inputmode="numeric" placeholder="30–45s" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+      <div class="set-row" data-set="2"><span class="set-num">ii</span><input type="text" inputmode="decimal" placeholder="—" data-field="carga"><input type="text" inputmode="numeric" placeholder="30–45s" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+      <div class="set-row" data-set="3"><span class="set-num">iii</span><input type="text" inputmode="decimal" placeholder="—" data-field="carga"><input type="text" inputmode="numeric" placeholder="30–45s" data-field="reps"><select data-field="rir"><option value="">—</option><option>0</option><option>1</option><option>2</option><option>3</option><option>3+</option></select><button class="set-check" type="button" aria-label="marcar feita">○</button></div>
+    </div>
+    <div class="obs-row"><label>Observações</label><textarea data-field="notes" placeholder="lado D / lado E, etc."></textarea></div>
+  </article>
+
+  <section class="footnotes container">
+    <span class="kicker">Notas de rodapé</span>
+    <ul>
+      <li>— RIR 1–2: pare uma ou duas reps antes da falha total.</li>
+      <li>— Bateu a faixa com RIR 1–2? Sobe carga na próxima semana.</li>
+      <li>— Aquecer com 2–3 séries leves no primeiro composto (supino).</li>
+      <li>— Bilateral: peso total da barra. Halteres: peso de um halter.</li>
+    </ul>
+  </section>
+</main>
+
+<footer class="colophon container">
+  <div class="count" id="completionSummary"><strong>0</strong> / 22 séries marcadas</div>
+  <div class="reset-wrap">
+    <button class="btn btn-ghost" id="resetWeek">apagar a semana atual</button>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var STORAGE_PREFIX = "pfit-preview:upper-a";
+  var TOTAL_SETS = 22;
+
+  function getWeek() {
+    var w = Number(localStorage.getItem(STORAGE_PREFIX + ":lastWeek")) || 1;
+    return (w < 1 || w > 12) ? 1 : w;
+  }
+  var currentWeek = getWeek();
+
+  function dataKey(w) { return STORAGE_PREFIX + ":w" + w; }
+  function loadWeek(w) {
+    try { return JSON.parse(localStorage.getItem(dataKey(w)) || "{}") || {}; }
+    catch (_) { return {}; }
+  }
+  function saveWeek(w, d) { localStorage.setItem(dataKey(w), JSON.stringify(d)); }
+  function readField(d, exKey, setIdx, field) { return d[exKey + ":" + setIdx + ":" + field] || ""; }
+  function writeField(w, exKey, setIdx, field, value) {
+    var d = loadWeek(w);
+    var k = exKey + ":" + setIdx + ":" + field;
+    if (value === "" || value === false) delete d[k];
+    else d[k] = value;
+    saveWeek(w, d);
+  }
+  function readNotes(d, exKey) { return d[exKey + ":notes"] || ""; }
+  function writeNotes(w, exKey, value) {
+    var d = loadWeek(w);
+    if (value === "") delete d[exKey + ":notes"];
+    else d[exKey + ":notes"] = value;
+    saveWeek(w, d);
+  }
+
+  function loadIntoUI() {
+    var d = loadWeek(currentWeek);
+    var cards = document.querySelectorAll("article.exercise");
+    var done = 0;
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i];
+      var exKey = card.getAttribute("data-ex");
+      var rows = card.querySelectorAll(".set-row");
+      for (var j = 0; j < rows.length; j++) {
+        var row = rows[j];
+        var setIdx = row.getAttribute("data-set");
+        var inputs = row.querySelectorAll("input[data-field], select[data-field]");
+        for (var k = 0; k < inputs.length; k++) {
+          var inp = inputs[k];
+          inp.value = readField(d, exKey, setIdx, inp.getAttribute("data-field"));
+        }
+        var isDone = d[exKey + ":" + setIdx + ":done"] === true;
+        row.classList.toggle("done", isDone);
+        var check = row.querySelector(".set-check");
+        if (check) check.textContent = isDone ? "✓" : "○";
+        if (isDone) done++;
+      }
+      var ta = card.querySelector("textarea[data-field='notes']");
+      if (ta) ta.value = readNotes(d, exKey);
+    }
+    updateSummary(done);
+  }
+  function updateSummary(done) {
+    if (done == null) {
+      var d = loadWeek(currentWeek);
+      done = 0;
+      for (var key in d) if (key.endsWith(":done") && d[key]) done++;
+    }
+    document.getElementById("completionSummary").innerHTML =
+      "<strong>" + String(done).padStart(2, "0") + "</strong> de " + TOTAL_SETS + " séries marcadas · semana " + String(currentWeek).padStart(2, "0");
+  }
+
+  document.addEventListener("input", function (e) {
+    var t = e.target;
+    if (!t) return;
+    var field = t.getAttribute && t.getAttribute("data-field");
+    if (!field) return;
+    if (field === "notes") {
+      var card = t.closest("article.exercise");
+      if (!card) return;
+      writeNotes(currentWeek, card.getAttribute("data-ex"), t.value);
+      return;
+    }
+    var row = t.closest(".set-row");
+    var card2 = t.closest("article.exercise");
+    if (!row || !card2) return;
+    writeField(currentWeek, card2.getAttribute("data-ex"), row.getAttribute("data-set"), field, t.value);
+  });
+  document.addEventListener("change", function (e) {
+    if (e.target && e.target.tagName === "SELECT") {
+      var t = e.target;
+      var row = t.closest(".set-row");
+      var card = t.closest("article.exercise");
+      if (row && card) {
+        writeField(currentWeek, card.getAttribute("data-ex"), row.getAttribute("data-set"), t.getAttribute("data-field"), t.value);
+      }
+    }
+  });
+
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest && e.target.closest(".set-check");
+    if (!btn) return;
+    var row = btn.closest(".set-row");
+    var card = btn.closest("article.exercise");
+    if (!row || !card) return;
+    var exKey = card.getAttribute("data-ex");
+    var setIdx = row.getAttribute("data-set");
+    var d = loadWeek(currentWeek);
+    var doneKey = exKey + ":" + setIdx + ":done";
+    var newDone = !(d[doneKey] === true);
+    writeField(currentWeek, exKey, setIdx, "done", newDone);
+    row.classList.toggle("done", newDone);
+    btn.textContent = newDone ? "✓" : "○";
+    if (newDone) {
+      var rest = Number(card.getAttribute("data-rest")) || 90;
+      startTimer(rest);
+      if (navigator.vibrate) { try { navigator.vibrate(120); } catch (_) {} }
+    }
+    updateSummary();
+  });
+
+  var sel = document.getElementById("weekSelect");
+  sel.value = String(currentWeek);
+  sel.addEventListener("change", function (e) {
+    currentWeek = Number(e.target.value) || 1;
+    localStorage.setItem(STORAGE_PREFIX + ":lastWeek", String(currentWeek));
+    loadIntoUI();
+  });
+
+  document.getElementById("resetWeek").addEventListener("click", function () {
+    if (!confirm("Apagar tudo da semana " + currentWeek + "?")) return;
+    localStorage.removeItem(dataKey(currentWeek));
+    loadIntoUI();
+  });
+
+  // Timer
+  var timerDisplay = document.getElementById("timerDisplay");
+  var timerActions = document.getElementById("timerActions");
+  var timerRunActions = document.getElementById("timerRunActions");
+  var pauseResumeBtn = document.getElementById("pauseResume");
+  var stopBtn = document.getElementById("stopTimer");
+  var addBtn = document.getElementById("addTime");
+  var timer = { remaining: 0, intervalId: null, paused: false };
+
+  function fmt(s) {
+    var sign = s < 0 ? "-" : "";
+    var abs = Math.abs(Math.floor(s));
+    var m = Math.floor(abs / 60), r = abs % 60;
+    return sign + (m < 10 ? "0" : "") + m + ":" + (r < 10 ? "0" : "") + r;
+  }
+  function renderTimer() {
+    timerDisplay.textContent = fmt(timer.remaining);
+    timerDisplay.classList.remove("running", "done");
+    if (timer.intervalId !== null) {
+      if (timer.remaining > 0 && !timer.paused) timerDisplay.classList.add("running");
+      else if (timer.remaining <= 0) timerDisplay.classList.add("done");
+      timerActions.classList.add("hidden");
+      timerRunActions.classList.remove("hidden");
+      pauseResumeBtn.textContent = timer.paused ? "Continuar" : "Pausa";
+    } else {
+      timerActions.classList.remove("hidden");
+      timerRunActions.classList.add("hidden");
+    }
+  }
+  function startTimer(seconds) {
+    if (timer.intervalId) clearInterval(timer.intervalId);
+    timer = { remaining: seconds, intervalId: null, paused: false };
+    timer.intervalId = setInterval(function () {
+      if (timer.paused) return;
+      timer.remaining -= 1;
+      if (timer.remaining === 0) beepAndVibrate();
+      if (timer.remaining <= -10) stop();
+      renderTimer();
+    }, 1000);
+    renderTimer();
+  }
+  function stop() {
+    if (timer.intervalId) clearInterval(timer.intervalId);
+    timer = { remaining: 0, intervalId: null, paused: false };
+    renderTimer();
+  }
+  timerActions.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-rest]");
+    if (t) startTimer(Number(t.getAttribute("data-rest")));
+  });
+  pauseResumeBtn.addEventListener("click", function () { timer.paused = !timer.paused; renderTimer(); });
+  stopBtn.addEventListener("click", stop);
+  addBtn.addEventListener("click", function () { timer.remaining += 30; renderTimer(); });
+
+  var audioCtx = null;
+  function ensureAudio() {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+    } catch (_) {}
+    return audioCtx;
+  }
+  function beep(freq, durMs, when) {
+    var ctx = ensureAudio(); if (!ctx) return;
+    try {
+      var osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = freq;
+      var t = ctx.currentTime + (when || 0);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.3, t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + durMs / 1000);
+      osc.start(t); osc.stop(t + durMs / 1000 + 0.02);
+    } catch (_) {}
+  }
+  function beepAndVibrate() {
+    beep(880, 180, 0); beep(1100, 220, 0.22);
+    if (navigator.vibrate) { try { navigator.vibrate([200, 100, 200]); } catch (_) {} }
+  }
+  document.addEventListener("click", function once() { ensureAudio(); document.removeEventListener("click", once); });
+
+  loadIntoUI();
+  renderTimer();
+})();
+</script>
+
+</body>
+</html>
